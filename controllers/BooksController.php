@@ -10,24 +10,51 @@ use models\Book;
 
 class BooksController extends Controller {
 
-    public function index(){
-        $model = new Book;
-        var_dump($model->getItems());
-    }
-
+    /**
+     * insert
+     */
     public function create() {
-        echo 'action CREATE';
+        $model = new Book;
+        $forSave = $model->load($_POST);
+        if($model->insert($forSave)){
+            echo json_encode(['success'=>1]);
+            die;
+        }
+        echo json_encode(['success'=>0]);
     }
 
     public function read() {
-        echo 'action read';
+        $model = new Book;
+        $model->select(['*']);
+
+        if(isset($_GET['book_id']) && !empty($_GET['book_id'])){
+            echo json_encode($model->getData($_GET['book_id']));
+            die;
+        }
+
+        echo json_encode($model->getAll());
     }
 
+    /**
+     * @todo add update method
+     */
     public function update() {
+        //UPDATE
+
         echo 'action update';
     }
-
+    
     public function delete() {
-        echo 'action delete';
+        if(!isset($_POST['book_id']) || empty($_POST['book_id'])){
+            echo json_encode(['success'=>0]);
+            die;
+        }
+
+        $model = new Book;
+        if($model->delete($_POST['book_id'])){
+            echo json_encode(['success'=>1]);
+            die;
+        }
+        echo json_encode(['success'=>0]);
     }
 }

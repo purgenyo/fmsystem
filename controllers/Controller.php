@@ -10,7 +10,7 @@ namespace controllers;
 class Controller
 {
 	protected $controller = 'books';
-    protected $action = 'index';
+    protected $action = 'read';
 
 	public function init(){
 

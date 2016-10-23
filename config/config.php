@@ -8,7 +8,7 @@ return [
 
     'db'=>[
         'login'=>'root',
-        'password'=>'toor',
+        'password'=>'root',
         'db_name'=>'books',
         'host'=>'localhost'
     ]

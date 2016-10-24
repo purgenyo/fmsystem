@@ -104,8 +104,7 @@ class DB
             echo new \Exception('empty fields');
             die;
         }
-        var_dump($this->attributes);
-        die;
+
         $this->_fields = $fields;
         $this->beforeInsert();
         $toFields = (implode(',', $this->attributes));
@@ -173,6 +172,8 @@ class DB
         $updates = [];
         if (count($attributes) > 0) {
             foreach ($attributes as $key => $value) {
+                if(empty($value))
+                    continue;
                 $value = $this->_connection->real_escape_string($value); // this is dedicated to @Jon
                 $value = "'$value'";
                 $updates[] = "$key = $value";

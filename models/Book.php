@@ -64,9 +64,7 @@ class Book extends \components\DB {
     public function load( $data ){
         $forSave = [];
         foreach($this->attributes as $attribute){
-            if(empty($data[$attribute]))
-                continue;
-            $forSave[$attribute] = $data[$attribute];
+            $forSave[$attribute] = isset($data[$attribute]) ? $data[$attribute] : '';
         }
         return $forSave;
     }

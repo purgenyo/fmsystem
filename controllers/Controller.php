@@ -26,7 +26,12 @@ class Controller
         $controller[0] = strtoupper($controller[0]);
         $controller = '\controllers\\' . $controller;
 		$current_controller = new $controller;
-		$current_controller->{$this->action}();
+
+		if(method_exists($current_controller, $this->action)){
+			$current_controller->{$this->action}();
+		} else {
+			echo new \Exception('action not found');
+		}
 	}
 
 	public function render( $view_file, $data = false ) {

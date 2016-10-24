@@ -22,6 +22,15 @@ class Book extends \components\DB {
         'last_modify'
     ];
 
+    /**
+     * @param array $attributes
+     * @param $pk
+     * @return bool|\mysqli_result
+     */
+    public function updateByPk( $attributes = [], $pk ){
+        return $this->update($attributes, $pk);
+    }
+
     public function beforeInsert(){
         $this->_fields['release_date'] = strtotime($this->_fields['release_date']);
         $this->_fields['create_date']  = time();
@@ -39,8 +48,8 @@ class Book extends \components\DB {
         return $result;
     }
 
+
     public function getAll(){
-        $this->find();
         $result = $this->all();
         if(empty($result))
             return [];
@@ -55,15 +64,29 @@ class Book extends \components\DB {
     public function load( $data ){
         $forSave = [];
         foreach($this->attributes as $attribute){
-            $forSave[$attribute] = isset($data[$attribute]) ? $data[$attribute] : '';
+            if(empty($data[$attribute]))
+                continue;
+            $forSave[$attribute] = $data[$attribute];
         }
         return $forSave;
     }
 
     public function dateFormat( $timestamp, $format = 'd.m.Y' ){
         $date = new DateTime();
+
+        if(!$this->_isTimestamp($timestamp)){
+            return '';
+        }
+
         $date->setTimestamp($timestamp);
         return $date->format($format);
+    }
+
+    private function _isTimestamp( $timestamp ){
+        return ((string) (int) $timestamp === $timestamp)
+        && ($timestamp <= PHP_INT_MAX)
+        && ($timestamp >= ~PHP_INT_MAX)
+        && (!strtotime($timestamp));
     }
 
 }

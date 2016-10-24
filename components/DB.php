@@ -8,15 +8,21 @@ use mysqli;
 /**
  * Class DB
  * @package components
+ *
+ * @var $_connection \mysqli
+ *
  */
 class DB
 {
 
     private $_connection;
     private $_result = [];
+    private $_select;
+    private $_where = '';
+
     public  $attributes = [];
     public  $tableName;
-    private $_select;
+    public  $pk;
     protected $_fields;
     public $schema;
 
@@ -33,8 +39,6 @@ class DB
         $connection = null;
         try {
             $connection = new mysqli();
-            //$connection->real_connect();
-
             $connection->real_connect($config_db['host'], $config_db['login'], $config_db['password'], $config_db['db_name']);
             $connection->set_charset('utf8');
             $this->setConnection( $connection );
@@ -62,6 +66,14 @@ class DB
         return $this->_connection;
     }
 
+    public function runSql( $sql ){
+        if($result = $this->_connection->query( $sql ))
+            return $result;
+        else{
+            echo new \Exception( $this->_connection->error );
+            die;
+        }
+    }
     /**
      * @param $sql
      * @return array
@@ -79,13 +91,8 @@ class DB
         $this->_select = implode(',', $select);
     }
 
-    public function one(){
-        if(isset($this->_result[0]))
-            return $this->_result[0];
-        return $this->_result;
-    }
-
     public function all(){
+        $this->find();
         return $this->_result;
     }
 
@@ -93,6 +100,12 @@ class DB
     public function beforeInsert() {}
 
     public function insert( $fields ){
+        if(empty($fields)){
+            echo new \Exception('empty fields');
+            die;
+        }
+        var_dump($this->attributes);
+        die;
         $this->_fields = $fields;
         $this->beforeInsert();
         $toFields = (implode(',', $this->attributes));
@@ -110,6 +123,14 @@ class DB
         return true;
     }
 
+    public function setWhere( $sqlQuery ){
+        $this->_where = $sqlQuery;
+    }
+
+    public function addWhere( $sqlQuery ){
+        $this->_where .= $sqlQuery;
+    }
+
     /*
      * @todo add all sql methods
      * Construct sql query
@@ -119,12 +140,16 @@ class DB
         if(empty($this->_select)){
             $this->_select = '*';
         }
-        $this->_query("SELECT {$this->_select} FROM `{$this->tableName}`");
+        $queryString = "SELECT {$this->_select} FROM `{$this->tableName}`";
+        if(!empty($this->_where)){
+            $queryString .= ' WHERE ' . $this->_where;
+        }
+        $this->_query($queryString);
     }
 
     public function pk( $pk ){
         $pk = intval($pk);
-        $this->_query( "SELECT {$this->_select} FROM `{$this->tableName}` where {$this->pk}={$pk}" );
+        $this->_query( "SELECT {$this->_select} FROM `{$this->tableName}` WHERE {$this->pk}={$pk}" );
         return isset($this->_result[0]) ? $this->_result[0] : [];
     }
 
@@ -136,5 +161,37 @@ class DB
             return false;
         }
         return $this->_connection->affected_rows;
+    }
+
+    public function update( $attributes, $pk = false ){
+
+        if(empty($attributes)){
+            echo new \Exception('params error');
+            die;
+        }
+
+        $updates = [];
+        if (count($attributes) > 0) {
+            foreach ($attributes as $key => $value) {
+                $value = $this->_connection->real_escape_string($value); // this is dedicated to @Jon
+                $value = "'$value'";
+                $updates[] = "$key = $value";
+            }
+        }
+        $updates = implode(', ', $updates);
+
+        if($pk!=false){
+            $pk = intval($this->_connection->real_escape_string($pk));
+            $this->addWhere( "{$this->pk} = $pk");
+        }
+
+
+
+        $sql = "UPDATE $this->tableName SET {$updates}";
+        if(!empty($this->_where)){
+            $sql .= " WHERE  {$this->_where}";
+        }
+
+        return $this->runSql($sql);
     }
 }

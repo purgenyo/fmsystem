@@ -39,9 +39,19 @@ class BooksController extends Controller {
      * @todo add update method
      */
     public function update() {
-        //UPDATE
+        $model = new Book;
+        $book_id = false;
+        $forUpdate = $model->load($_POST);
+        if(isset($_GET['book_id']) && !empty($_GET['book_id'])){
+            $book_id = $_GET['book_id'];
+        }
 
-        echo 'action update';
+        if($result = $model->updateByPk($forUpdate, $book_id )){
+            echo json_encode(['success'=>1]);
+            die;
+        }
+
+        echo json_encode(['success'=>0]);
     }
     
     public function delete() {
